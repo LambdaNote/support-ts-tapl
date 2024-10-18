@@ -3,8 +3,7 @@ import { error } from "./utils.ts";
 type Type =
   | { tag: "Boolean" }
   | { tag: "Number" }
-  | { tag: "Func"; params: Param[]; retType: Type }
-  ;
+  | { tag: "Func"; params: Param[]; retType: Type };
 
 type Param = { name: string; type: Type };
 
@@ -18,8 +17,7 @@ type Term =
   | { tag: "func"; params: Param[]; body: Term }
   | { tag: "call"; func: Term; args: Term[] }
   | { tag: "seq"; body: Term; rest: Term }
-  | { tag: "const"; name: string; init: Term; rest: Term }
-  ;
+  | { tag: "const"; name: string; init: Term; rest: Term };
 
 type TypeEnv = Record<string, Type>;
 
@@ -32,9 +30,11 @@ function typeEq(ty1: Type, ty2: Type): boolean {
     case "Func": {
       if (ty1.tag !== "Func") return false;
       if (ty1.params.length !== ty2.params.length) return false;
-      if (!ty1.params.every(
-        (param1, i) => typeEq(param1.type, ty2.params[i].type)
-      )) return false;
+      if (
+        !ty1.params.every(
+          (param1, i) => typeEq(param1.type, ty2.params[i].type),
+        )
+      ) return false;
       if (!typeEq(ty1.retType, ty2.retType)) return false;
       return true;
     }
@@ -65,13 +65,13 @@ export function typecheck(t: Term, tyEnv: TypeEnv): Type {
       return { tag: "Number" };
     }
     case "var": {
-      if (!(t.name in tyEnv)) error(`unknown variable: ${ t.name }`, t);
+      if (!(t.name in tyEnv)) error(`unknown variable: ${t.name}`, t);
       return tyEnv[t.name];
-  }
+    }
     case "func": {
       const newTyEnv = t.params.reduce((tyEnv, { name, type }) => ({ ...tyEnv, [name]: type }), tyEnv);
       const retType = typecheck(t.body, newTyEnv);
-      return { tag: "Func", params: t.params, retType }
+      return { tag: "Func", params: t.params, retType };
     }
     case "call": {
       const funcTy = typecheck(t.func, tyEnv);
@@ -80,7 +80,7 @@ export function typecheck(t: Term, tyEnv: TypeEnv): Type {
       t.args.forEach((arg, i) => {
         const argTy = typecheck(arg, tyEnv);
         if (!typeEq(argTy, funcTy.params[i].type)) error("parameter type mismatch", arg);
-      })
+      });
       return funcTy.retType;
     }
     case "seq":

@@ -5,15 +5,15 @@ type Position = { line: number; column: number };
 type Location = { start: Position; end: Position };
 
 export type Type =
-  | { loc?: Location, tag: "Boolean" } // boolean
-  | { loc?: Location, tag: "Number" } // number
-  | { loc?: Location, tag: "Func"; params: Param[]; retType: Type } // (_: T0, ...) => T
-  | { loc?: Location, tag: "Object"; props: PropertyType[] } // { s0: T0, ... }
-  | { loc?: Location, tag: "TaggedUnion"; variants: VariantType[] } // { tag: "s0", val: T } | ...
-  | { loc?: Location, tag: "Rec"; name: string; type: Type } // mu V. T
-  | { loc?: Location, tag: "Forall"; typeParams: string[]; type: Type } // <V0, ...>T
-  | { loc?: Location, tag: "TypeVar"; name: string; typeArgs?: Type[] } // V
-  ;
+  | { loc?: Location; tag: "Boolean" } // boolean
+  | { loc?: Location; tag: "Number" } // number
+  | { loc?: Location; tag: "Func"; params: Param[]; retType: Type } // (_: T0, ...) => T
+  | { loc?: Location; tag: "Object"; props: PropertyType[] } // { s0: T0, ... }
+  | { loc?: Location; tag: "TaggedUnion"; variants: VariantType[] } // { tag: "s0", val: T } | ...
+  | { loc?: Location; tag: "Rec"; name: string; type: Type } // mu V. T
+  | { loc?: Location; tag: "Forall"; typeParams: string[]; type: Type } // <V0, ...>T
+  | { loc?: Location; tag: "TypeVar"; name: string; typeArgs?: Type[] } // V
+;
 
 type Param = { name: string; type: Type };
 type PropertyType = { name: string; type: Type };
@@ -36,8 +36,7 @@ type Term =
   | { loc: Location; tag: "taggedUnionGet"; varName: string; clauses: VariantTerm[] }
   | { loc: Location; tag: "recFunc"; funcName: string; params: Param[]; retType: Type; body: Term; rest: Term }
   | { loc: Location; tag: "typeAbs"; typeParams: string[]; body: Term }
-  | { loc: Location; tag: "typeApp"; typeAbs: Term, typeArgs: Type[] }
-  ;
+  | { loc: Location; tag: "typeApp"; typeAbs: Term; typeArgs: Type[] };
 
 type PropertyTerm = { name: string; term: Term };
 type VariantTerm = { label: string; term: Term };
@@ -45,9 +44,9 @@ type VariantTerm = { label: string; term: Term };
 type TypeAliasMap = Record<string, { typeParams: string[] | null; type: Type }>;
 type TypeVarBindings = Record<string, Type>;
 type Context = {
-  globalTypeAliasMap: TypeAliasMap,
-  typeVarBindings: TypeVarBindings,
-}
+  globalTypeAliasMap: TypeAliasMap;
+  typeVarBindings: TypeVarBindings;
+};
 
 export function typeShow(ty: Type): string {
   switch (ty.tag) {
@@ -56,21 +55,21 @@ export function typeShow(ty: Type): string {
     case "Number":
       return "number";
     case "Func": {
-      const params = ty.params.map(({ name, type }) => `${ name }: ${ typeShow(type) }`);
-      return `(${ params.join(", ") }) => ${ typeShow(ty.retType) }`
+      const params = ty.params.map(({ name, type }) => `${name}: ${typeShow(type)}`);
+      return `(${params.join(", ")}) => ${typeShow(ty.retType)}`;
     }
     case "Object": {
-      const props = ty.props.map(({ name, type }) => `${ name }: ${ typeShow(type) }`);
-      return `{ ${ props.join(", ") } }`;
+      const props = ty.props.map(({ name, type }) => `${name}: ${typeShow(type)}`);
+      return `{ ${props.join(", ")} }`;
     }
     case "TaggedUnion": {
-      const variants = ty.variants.map(({ label, type }) => `{ tag: "${ label }", val: ${ typeShow(type) } }`);
-      return `(${ variants.join(" | ") })`;
+      const variants = ty.variants.map(({ label, type }) => `{ tag: "${label}", val: ${typeShow(type)} }`);
+      return `(${variants.join(" | ")})`;
     }
     case "Rec":
-      return `(mu ${ ty.name }. ${ typeShow(ty.type) })`;
+      return `(mu ${ty.name}. ${typeShow(ty.type)})`;
     case "Forall":
-      return `<${ ty.typeParams.join(", ") }>${ typeShow(ty.type) }`;
+      return `<${ty.typeParams.join(", ")}>${typeShow(ty.type)}`;
     case "TypeVar":
       return ty.name;
   }
@@ -82,7 +81,7 @@ function freeTyVars(ty: Type): Set<string> {
     case "Number":
       return new Set();
     case "Func":
-      return ty.params.reduce( (r, { type }) => r.union(freeTyVars(type)), freeTyVars(ty.retType));
+      return ty.params.reduce((r, { type }) => r.union(freeTyVars(type)), freeTyVars(ty.retType));
     case "Object":
       return ty.props.reduce((r, { type }) => r.union(freeTyVars(type)), new Set<string>());
     case "TaggedUnion":
@@ -99,7 +98,10 @@ function freeTyVars(ty: Type): Set<string> {
 function addDefinedTypeVars(tyVars: string[], ctx: Context): Context {
   return {
     globalTypeAliasMap: ctx.globalTypeAliasMap,
-    typeVarBindings: tyVars.reduce((bindings, name) => ({ ...bindings, [name]: { tag: "TypeVar", name } }), ctx.typeVarBindings),
+    typeVarBindings: tyVars.reduce(
+      (bindings, name) => ({ ...bindings, [name]: { tag: "TypeVar", name } }),
+      ctx.typeVarBindings,
+    ),
   };
 }
 
@@ -116,11 +118,14 @@ function expandTypeAliases(ty: Type, recDefined: Set<string>, ctx: Context): Typ
     }
     case "Object": {
       const props = ty.props.map(({ name, type }) => ({ name, type: expandTypeAliases(type, recDefined, ctx) }));
-      return { tag: "Object", props }
+      return { tag: "Object", props };
     }
     case "TaggedUnion": {
-      const variants = ty.variants.map(({ label, type }) => ({ label, type: expandTypeAliases(type, recDefined, ctx) }));
-      return { tag: "TaggedUnion", variants }
+      const variants = ty.variants.map(({ label, type }) => ({
+        label,
+        type: expandTypeAliases(type, recDefined, ctx),
+      }));
+      return { tag: "TaggedUnion", variants };
     }
     case "Rec": {
       const newCtx = addDefinedTypeVars([ty.name], ctx);
@@ -133,12 +138,12 @@ function expandTypeAliases(ty: Type, recDefined: Set<string>, ctx: Context): Typ
     case "TypeVar": {
       const typeArgs = ty.typeArgs;
       if (typeArgs) {
-        if (ty.name in ctx.typeVarBindings) error(`not a generic type: ${ ty.name }`, ty);
+        if (ty.name in ctx.typeVarBindings) error(`not a generic type: ${ty.name}`, ty);
         if (recDefined.has(ty.name)) error(`type recursion for generics is not supported`, ty);
-        if (!(ty.name in ctx.globalTypeAliasMap)) error(`unbound type variable: ${ ty.name }`, ty);
+        if (!(ty.name in ctx.globalTypeAliasMap)) error(`unbound type variable: ${ty.name}`, ty);
         const { typeParams, type } = ctx.globalTypeAliasMap[ty.name];
-        if (!typeParams) error(`not a generic type: ${ ty.name }`, ty);
-        if (typeParams.length !== typeArgs.length) error(`wrong number of type arguments for ${ ty.name }`, ty);
+        if (!typeParams) error(`not a generic type: ${ty.name}`, ty);
+        if (typeParams.length !== typeArgs.length) error(`wrong number of type arguments for ${ty.name}`, ty);
         const typeVarBindings = typeParams.reduce((bindings, typeParam, i) => {
           return { ...bindings, [typeParam]: expandTypeAliases(typeArgs[i], recDefined, ctx) };
         }, ctx.typeVarBindings);
@@ -149,13 +154,12 @@ function expandTypeAliases(ty: Type, recDefined: Set<string>, ctx: Context): Typ
         const retTy = expandTypeAliases(type, recDefined.union(new Set([ty.name])), newCtx);
         if (freeTyVars(retTy).has(ty.name)) error("bug?", ty);
         return retTy;
-      }
-      else {
+      } else {
         if (ty.name in ctx.typeVarBindings) return ctx.typeVarBindings[ty.name];
         if (recDefined.has(ty.name)) return { tag: "TypeVar", name: ty.name };
-        if (!(ty.name in ctx.globalTypeAliasMap)) error(`unbound type variable: ${ ty.name }`, ty);
+        if (!(ty.name in ctx.globalTypeAliasMap)) error(`unbound type variable: ${ty.name}`, ty);
         const { typeParams, type } = ctx.globalTypeAliasMap[ty.name];
-        if (typeParams) error(`type arguments are required for ${ ty.name }`, ty)
+        if (typeParams) error(`type arguments are required for ${ty.name}`, ty);
         const newCtx: Context = {
           globalTypeAliasMap: ctx.globalTypeAliasMap,
           typeVarBindings: {},
@@ -182,8 +186,9 @@ function getLiteralString(node: p.TSESTree.Expression) {
 }
 
 function getTypeProp(member: p.TSESTree.TypeElement) {
-  if (member.type !== "TSPropertySignature" || member.key.type !== "Identifier" || !member.typeAnnotation)
+  if (member.type !== "TSPropertySignature" || member.key.type !== "Identifier" || !member.typeAnnotation) {
     error("object type must have only normal key-value paris", member);
+  }
   return { key: member.key.name, type: member.typeAnnotation.typeAnnotation };
 }
 
@@ -191,8 +196,9 @@ function getProp(property: p.TSESTree.ObjectLiteralElement) {
   if (property.type === "SpreadElement") error("spread operator is not allowed", property);
   if (property.computed) error("key must be bare", property);
   if (property.value.type === "AssignmentPattern") error("AssignmentPattern is not allowed", property);
-  if (property.value.type === "TSEmptyBodyFunctionExpression")
+  if (property.value.type === "TSEmptyBodyFunctionExpression") {
     error("TSEmptyBodyFunctionExpression is not allowed", property);
+  }
   return { key: getIdentifier(property.key), value: property.value };
 }
 
@@ -206,13 +212,14 @@ function getTagAndVal(node: p.TSESTree.ObjectExpression) {
 }
 
 function getSwitchVarName(node: p.TSESTree.Expression) {
-  if (node.type !== "MemberExpression" || node.computed || getIdentifier(node.property) !== "tag")
+  if (node.type !== "MemberExpression" || node.computed || getIdentifier(node.property) !== "tag") {
     error(`switch statement must be switch(VAR.tag) { ... }`, node);
+  }
   return getIdentifier(node.object);
 }
 
 function getParam(node: p.TSESTree.Parameter): Param {
-  if (node.type !== "Identifier") error("parameter must be a variable", node)
+  if (node.type !== "Identifier") error("parameter must be a variable", node);
   if (!node.typeAnnotation) error("parameter type is required", node);
   const name = node.name;
   const type = convertType(node.typeAnnotation.typeAnnotation);
@@ -258,12 +265,14 @@ function convertType(node: p.TSESTree.TypeNode): Type {
     }
     case "TSUnionType": {
       const variants = node.types.map((variant) => {
-        if (variant.type !== "TSTypeLiteral" || variant.members.length !== 2)
+        if (variant.type !== "TSTypeLiteral" || variant.members.length !== 2) {
           error(`tagged union type must have { tag: "TAG", val: TYPE }`, variant);
+        }
         const { key: s0, type: ty0 } = getTypeProp(variant.members[0]);
         const { key: s1, type: ty1 } = getTypeProp(variant.members[1]);
-        if (s0 !== "tag" || ty0.type !== "TSLiteralType"|| s1 !== "val")
+        if (s0 !== "tag" || ty0.type !== "TSLiteralType" || s1 !== "val") {
           error(`tagged union type must have { tag: "TAG", val: TYPE }`, variant);
+        }
         const label = getLiteralString(ty0.literal);
         const type = convertType(ty1);
         return { label, type };
@@ -273,7 +282,7 @@ function convertType(node: p.TSESTree.TypeNode): Type {
     case "TSTypeReference": {
       const typeArgs = node.typeArguments?.params.map((tyArg) => convertType(tyArg));
       const name = getIdentifier(node.typeName);
-     return { tag: "TypeVar", name, typeArgs, loc: node.loc };
+      return { tag: "TypeVar", name, typeArgs, loc: node.loc };
     }
     default:
       error(`unknown node: ${node.type}`, node);
@@ -283,7 +292,7 @@ function convertType(node: p.TSESTree.TypeNode): Type {
 function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
   switch (node.type) {
     case "BinaryExpression": {
-      if (node.operator !== "+") error(`unsupported operator: ${ node.operator }`, node);
+      if (node.operator !== "+") error(`unsupported operator: ${node.operator}`, node);
       if (node.left.type === "PrivateIdentifier") error("private identifer is not allowed", node.left);
       const left = convertExpr(node.left, ctx);
       const right = convertExpr(node.right, ctx);
@@ -299,7 +308,7 @@ function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
         case "boolean":
           return { tag: node.value ? "true" : "false", loc: node.loc };
         default:
-          error(`unsupported literal: ${ node.value }`, node);
+          error(`unsupported literal: ${node.value}`, node);
       }
     case "ArrowFunctionExpression": {
       const typeParams = node.typeParameters?.params.map((typeParameter) => typeParameter.name.name);
@@ -309,10 +318,9 @@ function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
         return { name, type: simplifyType(type, newCtx) };
       });
       if (node.returnType) error("return type is not required for arrow function", node.returnType);
-      const body =
-        node.body.type === "BlockStatement" ?
-          convertStmts(node.body.body, true, newCtx) :
-          convertExpr(node.body, newCtx);
+      const body = node.body.type === "BlockStatement"
+        ? convertStmts(node.body.body, true, newCtx)
+        : convertExpr(node.body, newCtx);
       const func: Term = { tag: "func", params, body, loc: node.loc };
       return typeParams ? { tag: "typeAbs", typeParams, body: func, loc: node.typeParameters!.loc } : func;
     }
@@ -320,7 +328,7 @@ function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
       const args = node.arguments.map((argument) => {
         if (argument.type === "SpreadElement") error("argument must be an expression", argument);
         return convertExpr(argument, ctx);
-      })
+      });
       let func = convertExpr(node.callee, ctx);
       if (node.typeArguments) {
         const typeArgs = node.typeArguments.params.map((param) => simplifyType(convertType(param), ctx));
@@ -328,11 +336,13 @@ function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
       }
       return { tag: "call", func, args, loc: node.loc };
     }
-    case "TSAsExpression": case "TSTypeAssertion": {
-      if (node.expression.type !== "ObjectExpression")
+    case "TSAsExpression":
+    case "TSTypeAssertion": {
+      if (node.expression.type !== "ObjectExpression") {
         error(`type assertion must be <TYPE>{ tag: "TAG", val: EXPR }`, node);
+      }
       const ty = simplifyType(convertType(node.typeAnnotation), ctx);
-      const { tag, val } = getTagAndVal(node.expression)
+      const { tag, val } = getTagAndVal(node.expression);
       const term = convertExpr(val, ctx);
       return { tag: "taggedUnionNew", label: tag, term, as: ty, loc: node.loc };
     }
@@ -343,7 +353,7 @@ function convertExpr(node: p.TSESTree.Expression, ctx: Context): Term {
       return { tag: "objectGet", obj, propName, loc: node.loc };
     }
     case "ObjectExpression": {
-      const props = node.properties.map((property) => {   
+      const props = node.properties.map((property) => {
         const { key: name, value } = getProp(property);
         return { name, term: convertExpr(value, ctx) };
       });
@@ -385,8 +395,9 @@ function convertStmts(nodes: p.TSESTree.Statement[], requireReturn: boolean, ctx
       }
       case "ExportNamedDeclaration": {
         if (last && requireReturn) error("return is required", node);
-        if (!node.declaration || node.declaration.type !== "FunctionDeclaration")
+        if (!node.declaration || node.declaration.type !== "FunctionDeclaration") {
           error("export must have a function declaration", node);
+        }
         return getRecFunc(node.declaration, ctx, last ? null : () => convertStmt(i + 1, ctx));
       }
       case "FunctionDeclaration": {
@@ -455,29 +466,32 @@ function convertProgram(nodes: p.TSESTree.Statement[]): Term {
   return convertStmts(stmts, false, ctx);
 }
 
-type ExtractTagsSub<T, K> =
-  T extends Type | Term ? ExtractTags<T, K> :
-  T extends Type[] ? ExtractTags<Type, K>[] :
-  T extends Term[] ? ExtractTags<Term, K>[] :
-  T extends (infer U)[] ? { [P in keyof U]: ExtractTags<U[P], K> }[] :
-  T;
+type ExtractTagsSub<T, K> = T extends Type | Term ? ExtractTags<T, K>
+  : T extends Type[] ? ExtractTags<Type, K>[]
+  : T extends Term[] ? ExtractTags<Term, K>[]
+  : T extends (infer U)[] ? { [P in keyof U]: ExtractTags<U[P], K> }[]
+  : T;
 type ExtractTags<T, K> = Extract<{ [P in keyof T]: ExtractTagsSub<T[P], K> }, { tag: K }>;
 
 function subsetSystem<Types extends Type["tag"], Terms extends Term["tag"]>(
-  node: Term, keepTypes: Types[], keepTerms: Terms[]
-): ExtractTags<Term, Types|Terms> {
+  node: Term,
+  keepTypes: Types[],
+  keepTerms: Terms[],
+): ExtractTags<Term, Types | Terms> {
   if (!node.tag) return node;
 
-  if (!(<string[]>keepTypes).includes(node.tag) && !(<string[]>keepTerms).includes(node.tag))
-    throw new Error(`"${ node.tag }" is not allowed in this system`);
+  if (!(<string[]> keepTypes).includes(node.tag) && !(<string[]> keepTerms).includes(node.tag)) {
+    throw new Error(`"${node.tag}" is not allowed in this system`);
+  }
 
   // deno-lint-ignore no-explicit-any
   const newNode: any = {};
   Object.entries(node).forEach(([key, val]) => {
-    if (typeof val !== "object" || !val.tag)
+    if (typeof val !== "object" || !val.tag) {
       newNode[key] = val;
-    else
+    } else {
       newNode[key] = subsetSystem<Types, Terms>(val, keepTypes, keepTerms);
+    }
   });
   return newNode;
 }
@@ -490,7 +504,7 @@ export function parse(code: string): Term {
 export function parseArith(code: string) {
   return subsetSystem(
     parse(code),
-    ["Boolean", "Number"], 
+    ["Boolean", "Number"],
     ["true", "false", "if", "number", "add"],
   );
 }
@@ -498,7 +512,7 @@ export function parseArith(code: string) {
 export function parseBasic(code: string) {
   return subsetSystem(
     parse(code),
-    ["Boolean", "Number", "Func"], 
+    ["Boolean", "Number", "Func"],
     ["true", "false", "if", "number", "add", "var", "func", "call", "seq", "const"],
   );
 }
@@ -507,7 +521,23 @@ export function parseExtended(code: string) {
   return subsetSystem(
     parse(code),
     ["Boolean", "Number", "Func", "Object", "TaggedUnion"],
-    ["true", "false", "if", "number", "add", "var", "func", "call", "seq", "const", "objectNew", "objectGet", "taggedUnionNew", "taggedUnionGet", "recFunc"],
+    [
+      "true",
+      "false",
+      "if",
+      "number",
+      "add",
+      "var",
+      "func",
+      "call",
+      "seq",
+      "const",
+      "objectNew",
+      "objectGet",
+      "taggedUnionNew",
+      "taggedUnionGet",
+      "recFunc",
+    ],
   );
 }
 
@@ -531,7 +561,23 @@ export function parseRec2(code: string) {
   return subsetSystem(
     parse(code),
     ["Boolean", "Number", "Func", "Object", "TaggedUnion", "Rec", "TypeVar"],
-    ["true", "false", "if", "number", "add", "var", "func", "call", "seq", "const", "objectNew", "objectGet", "taggedUnionNew", "taggedUnionGet", "recFunc"],
+    [
+      "true",
+      "false",
+      "if",
+      "number",
+      "add",
+      "var",
+      "func",
+      "call",
+      "seq",
+      "const",
+      "objectNew",
+      "objectGet",
+      "taggedUnionNew",
+      "taggedUnionGet",
+      "recFunc",
+    ],
   );
 }
 
@@ -548,8 +594,7 @@ export function error(msg: string, node: any): never {
   if (node.loc) {
     const { start, end } = node.loc;
     throw new Error(`test.ts:${start.line}:${start.column + 1}-${end.line}:${end.column + 1} ${msg}`);
-  }
-  else {
+  } else {
     throw new Error(msg);
   }
 }
@@ -563,5 +608,5 @@ export function generateTestUtils(typecheck: (code: any) => Type) {
     ng: (expected: string, code: string) => {
       assertThrows(() => typecheck(code), Error, expected);
     },
-   };
+  };
 }
