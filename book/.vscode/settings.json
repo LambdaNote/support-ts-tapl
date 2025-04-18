@@ -1,0 +1,5 @@
+{
+  "deno.enable": true,
+  "deno.config": "./deno.jsonc",
+  "lineWidth": 83
+}
