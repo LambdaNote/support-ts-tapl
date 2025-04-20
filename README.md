@@ -10,7 +10,7 @@
 `book`ディレクトリ内には、パーサ用のライブラリと書籍の各章で実装する型検査器の例があります。
 
 - [book/tiny-ts-parser.ts](https://github.com/LambdaNote/support-ts-tapl/blob/main/book/tiny-ts-parser.ts) ：対象言語の構文をパースするためのライブラリ（使い方は同書の1.4節を参照）
-- [book/examples/](https://github.com/LambdaNote/support-ts-tapl/blob/main/book/examples) ：各章で実装する型検査器
+- [book/typecheckers/](https://github.com/LambdaNote/support-ts-tapl/blob/main/book/typecheckers) ：各章で実装する型検査器
 
 ## 「TypeScriptではじめる型システム」で利用するライブラリなど
 
