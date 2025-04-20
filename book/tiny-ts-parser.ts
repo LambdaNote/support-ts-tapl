@@ -1,4 +1,4 @@
-import * as p from "@typescript-eslint/typescript-estree";
+import * as p from "npm:@typescript-eslint/typescript-estree@8.21.0";
 
 type Position = { line: number; column: number };
 type Location = { start: Position; end: Position };
