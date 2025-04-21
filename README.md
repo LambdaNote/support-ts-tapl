@@ -20,4 +20,10 @@
 - [article/arith.ts](https://github.com/LambdaNote/support-ts-tapl/blob/main/article/arith.ts) ：1.2節で作る型検査器
 - [article/basic.ts](https://github.com/LambdaNote/support-ts-tapl/blob/main/article/basic.ts) ：1.3節と1.4節で作る型検査器
 
+## 書籍の正誤情報
+
+正誤情報は下記を参照してください。
+
+- [正誤情報](https://github.com/LambdaNote/errata-typesystems-1-1/issues?q=is%3Aissue+is%3Aopen+sort%3Acreated-asc)
+- [新しい正誤を報告する](https://github.com/LambdaNote/errata-typesystems-1-1)（新しいissueを立てるのではなく、ページごとに指定されているissueにコメントをしてください）
 
