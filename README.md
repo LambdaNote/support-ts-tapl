@@ -12,6 +12,8 @@
 - [book/tiny-ts-parser.ts](https://github.com/LambdaNote/support-ts-tapl/blob/main/book/tiny-ts-parser.ts) ：対象言語の構文をパースするためのライブラリ（使い方は同書の1.4節を参照）
 - [book/typecheckers/](https://github.com/LambdaNote/support-ts-tapl/blob/main/book/typecheckers) ：各章で実装する型検査器
 
+実体は https://github.com/mame/tiny-ts-parser をsubtreeとして `book` に取り込んでいます。もし本リポジトリが更新されていない場合は [元リポジトリ](https://github.com/mame/tiny-ts-parser) をあたってみてください。
+
 ## 「TypeScriptではじめる型システム」で利用するライブラリなど
 
 `article`ディレクトリ内には、記事中に出てくる下記のファイルがあります。
