@@ -984,6 +984,9 @@ function convertStmts(nodes: p.TSESTree.Statement[], requireReturn: boolean, ctx
       case "ThrowStatement": {
         return { tag: "undefined", loc: node.loc };
       }
+      case "EmptyStatement": {
+        return convertStmt(i + 1, ctx);
+      }
       default:
         error(`unsupported statement node: ${node.type}`, node);
     }
