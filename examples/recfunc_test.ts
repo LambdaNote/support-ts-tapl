@@ -26,6 +26,16 @@ test("recursive func", () =>
   fib;
 `,
   ));
+test("recursive func (empty string)", () =>
+  ok(
+    "(n: number) => number",
+    `
+  function fib(n: number): number {
+    return fib(n + 1) + fib(n);
+  };
+  fib;
+`,
+  ));
 test("recursive func error", () =>
   ng(
     /wrong return type/,

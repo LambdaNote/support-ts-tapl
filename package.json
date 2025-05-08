@@ -1,6 +1,6 @@
 {
   "name": "tiny-ts-parser",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "A lightweight library featuring parsers for multiple minimal subsets of TypeScript, designed for learning and experimenting with type systems",
   "type": "commonjs",
   "main": "dist/tiny-ts-parser.js",
@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build"
   },
   "author": "Yusuke Endoh",
   "license": "MIT",
